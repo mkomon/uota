@@ -12,10 +12,26 @@ import upip_utarfile as tarfile
 from micropython import const
 
 try:
+    import logging
+except ImportError:
+    class logging:
+        def critical(self, entry):
+            print('CRITICAL: ' + entry)
+        def error(self, entry):
+            print('ERROR: ' + entry)
+        def warning(self, entry):
+            print('WARNING: ' + entry)
+        def info(self, entry):
+            print('INFO: ' + entry)
+        def debug(self, entry):
+            print('DEBUG: ' + entry)
+    logging = logging()
+            
+try:
     from ucertpin import get_pubkey_hash_from_der
     ucertpin_available = True
 except ImportError:
-    print('ucertpin package not found, certificate pinning is disabled')
+    logging.warning('ucertpin package not found, certificate pinning is disabled')
     ucertpin_available = False
 
 
@@ -28,7 +44,7 @@ def load_ota_cfg():
             ota_config.update(eval(f.read()))
         return True
     except OSError:
-        print('Cannot find uota config file `uota.cfg`. OTA is disabled.')
+        logging.error('Cannot find uota config file `uota.cfg`. OTA is disabled.')
         return False
 
 def recursive_delete(path: str):
@@ -63,7 +79,7 @@ def check_free_space(min_free_space: int) -> bool:
     min_free_space is measured in kB
     """
     if not any([isinstance(min_free_space, int), isinstance(min_free_space, float)]):
-        print('min_free_space must be an int or float')
+        logging.warning('min_free_space must be an int or float')
         return False
 
     fs_stat = uos.statvfs('/')
@@ -91,7 +107,7 @@ def check_for_updates(version_check=True, quiet=False, pubkey_hash=b'') -> bool:
     if ucertpin_available and pubkey_hash:
         server_pubkey_hash = get_pubkey_hash_from_der(response.raw.getpeercert(True))
         if server_pubkey_hash != pubkey_hash:
-            print('Certificate pinning failed, the hash of server public key does not match. Aborting the update.')
+            logging.warning('Certificate pinning failed, the hash of server public key does not match. Aborting the update.')
             return False
 
     remote_version, remote_filename, *optional = response.text.strip().rstrip(';').split(';')
@@ -104,14 +120,14 @@ def check_for_updates(version_check=True, quiet=False, pubkey_hash=b'') -> bool:
             local_version = f.read().strip()
     except OSError:
         if version_check:
-            not quiet and print('local version information missing, cannot proceed')
+            not quiet and logging.warning('local version information missing, cannot proceed')
             return False
-        not quiet and print('local version information missing, ignoring it')
+        not quiet and logging.warning('local version information missing, ignoring it')
 
     if not version_check or remote_version > local_version:
-        not quiet and print(f'new version {remote_version} is available')
+        not quiet and logging.info(f'new version {remote_version} is available')
         if not check_free_space(min_free_space):
-            not quiet and print('not enough free space for the new firmware')
+            not quiet and logging.error('not enough free space for the new firmware')
             return False
 
         if remote_hash:
@@ -129,7 +145,7 @@ def check_for_updates(version_check=True, quiet=False, pubkey_hash=b'') -> bool:
                     hash_obj.update(chunk)
                 f.write(chunk)
         if remote_hash and ubinascii.hexlify(hash_obj.digest()).decode() != remote_hash:
-            not quiet and print('hashes don\'t match, cannot install the new firmware')
+            not quiet and logging.error('hashes don\'t match, cannot install the new firmware')
             uos.remove(ota_config['tmp_filename'])
             return False
         return True
@@ -148,7 +164,7 @@ def install_new_firmware(quiet=False):
     try:
         uos.stat(ota_config['tmp_filename'])
     except OSError:
-        print('No new firmware file found in flash.')
+        logging.info('No new firmware file found in flash.')
         return
 
     with open(ota_config['tmp_filename'], 'rb') as f1:
@@ -158,17 +174,17 @@ def install_new_firmware(quiet=False):
             file_name = _file.name
             if file_name in ota_config['excluded_files']:
                 item_type = 'directory' if file_name.endswith('/') else 'file'
-                not quiet and print(f'Skipping excluded {item_type} {file_name}')
+                not quiet and logging.info(f'Skipping excluded {item_type} {file_name}')
                 continue
 
             if file_name.endswith('/'):  # is a directory
                 try:
-                    not quiet and print(f'creating directory {file_name} ... ', end='')
+                    not quiet and logging.debug(f'creating directory {file_name} ... ', end='')
                     uos.mkdir(file_name[:-1])  # without trailing slash or fail with errno 2
-                    not quiet and print('ok')
+                    not quiet and logging.debug('ok')
                 except OSError as e:
                     if e.errno == 17:
-                        not quiet and print('already exists')
+                        not quiet and logging.debug('already exists')
                     else:
                         raise e
                 continue
@@ -180,7 +196,7 @@ def install_new_firmware(quiet=False):
                     if not buf:
                         break
                     written_bytes += f_out.write(buf)
-                not quiet and print(f'file {file_name} ({written_bytes} B) written to flash')
+                not quiet and logging.info(f'file {file_name} ({written_bytes} B) written to flash')
 
     uos.remove(ota_config['tmp_filename'])
     if load_ota_cfg():
