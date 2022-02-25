@@ -180,7 +180,7 @@ def install_new_firmware(quiet=False):
 
             if file_name.endswith('/'):  # is a directory
                 try:
-                    not quiet and log.debug(f'creating directory {file_name} ... ', end='')
+                    not quiet and log.debug(f'creating directory {file_name} ... ')
                     uos.mkdir(file_name[:-1])  # without trailing slash or fail with errno 2
                     not quiet and log.debug('ok')
                 except OSError as e:
