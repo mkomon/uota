@@ -1,7 +1,7 @@
 {
   "urls": [
-    ["uota/__init__.py", "github:ThinkTransit/uota/__init__.py"],
-    ["uota/uota_core.py", "github:ThinkTransit/uota/uota_core.py"]
+    ["uota/__init__.py", "github:ThinkTransit/uota/uota/__init__.py"],
+    ["uota/uota_core.py", "github:ThinkTransit/uota/uota/uota_core.py"]
   ],
   "deps": [
     ["utarfile", "latest"]
