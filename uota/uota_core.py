@@ -8,7 +8,7 @@ import gc
 import uos
 import urequests
 import uzlib
-import upip_utarfile as tarfile
+import utarfile as tarfile
 from micropython import const
 
 try:
