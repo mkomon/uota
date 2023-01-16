@@ -20,11 +20,29 @@ Other OTA updaters, notably [rdehuyss/micropython-ota-updater](https://github.co
 - checks if there is sufficient available free space in the file system (optional)
 - compares firmware version: the content of `version` file from MicroPython device file system and the version published on your server stored in `latest` file, see details below
 
+## Installation (requires MicroPython release 1.20)
+
+Install using [MicroPython mip](https://docs.micropython.org/en/latest/reference/packages.html)
+
+```python
+>>> import mip
+>>> mip.install('github:mkomon/uota')
+```
+
+or using mpremote
+
+```python
+mpremote mip install github:mkomon/uota
+```
+
+## Manual Installation
+
+Copy uota.py to the root directory or "lib" directory of your device.
+
 ## Usage
 
 Drop the following files into the root of your project:
 
-1. uota.py
 1. uota.cfg
    - must be a valid Python dictionary with the following keys:
       - `url`

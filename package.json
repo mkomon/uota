@@ -1,0 +1,9 @@
+{
+  "urls": [
+    ["uota.py", "github:mkomon/uota/lib/uota.py"]
+  ],
+  "deps": [
+    ["utarfile"]
+  ],
+  "version": "0.1"
+}
