@@ -1,10 +1,9 @@
 {
   "urls": [
-    ["uota/__init__.py", "github:mkomon/uota/uota/__init__.py"],
-    ["uota/uota_core.py", "github:mkomon/uota/uota/uota_core.py"]
+    ["uota.py", "github:mkomon/uota/lib/uota.py"]
   ],
   "deps": [
-    ["utarfile", "latest"]
+    ["utarfile"]
   ],
   "version": "0.1"
 }
